@@ -1,0 +1,53 @@
+<canvas id="c" width="800" height="600" style="width: 800px; height: 600px;"></canvas>
+ 
+<script  id="vertex-shader-2d" type="x-shader/x-vertex">
+// per-vertex lighting with a directional light source
+
+// vertex attributes
+attribute vec3 vertex;
+attribute vec3 normal;
+attribute vec2 texCoord;
+
+
+uniform mat4 projection;
+uniform mat4 modelView;
+
+varying vec3 vNormal;
+varying vec4 vColor;
+void main(void)
+{ vec2 texC = texCoord;
+  // transform vertex position to clip space
+  gl_Position = projection * modelView * vec4(vertex, 1);
+	vNormal = normal;
+	vColor = vec4(1,0,0,1);
+}
+
+</script>
+<!-- fragment shader -->
+<script  id="fragment-shader-2d" type="x-shader/x-fragment">
+
+
+
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+#else
+    precision mediump float;
+#endif
+
+uniform vec4 color;
+varying vec4 vColor;
+varying vec3 vNormal;
+
+void main(void)
+{
+	gl_FragColor = color;
+}
+
+</script>
+
+<script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
+<script src="https://webglfundamentals.org/webgl/resources/m3.js"></script>
+<script src="https://webglfundamentals.org/webgl/resources/m4.js"></script>
+<script src="webglUtils.js"></script>
+<script src="Sphere.js"></script>
+<script src="webgl_simple.js"></script>
