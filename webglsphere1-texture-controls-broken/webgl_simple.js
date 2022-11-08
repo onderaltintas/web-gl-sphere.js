@@ -14,7 +14,7 @@ function main() {
   if (!gl) {
     return;
   }
-
+  gl.enable(gl.DEPTH_TEST);
   gl.textureEnabled = true;
   var tLoaded = false;
   // Create a texture.
