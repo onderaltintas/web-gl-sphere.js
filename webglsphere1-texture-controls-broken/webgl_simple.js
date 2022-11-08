@@ -10,12 +10,29 @@ function main() {
   /** @type {HTMLCanvasElement} */
   var canvas = document.querySelector("#c");
   var gl = canvas.getContext("webgl");
-  gl.textureEnabled = true;
-  gl.tex0 = loadTexture(gl, "world.png", true);
-  gl.bindTexture(gl.TEXTURE_2D, gl.tex0);
+
   if (!gl) {
     return;
   }
+
+  gl.textureEnabled = true;
+  var tLoaded = false;
+  // Create a texture.
+  var texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  // Fill the texture with a 1x1 blue pixel.
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+                new Uint8Array([0, 0, 255, 255]));
+  // Asynchronously load an image
+  var image = new Image();
+  image.src = "world.jpg";
+  image.addEventListener('load', function() {
+    // Now that the image has loaded make copy it to the texture.
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    tLoaded = true;
+  });
 
   // setup GLSL program
   var program = webglUtils.createProgramFromScripts(gl, ["vertex-shader-2d", "fragment-shader-2d"]);
@@ -37,6 +54,11 @@ function main() {
 
   // Draw the scene.
   function drawScene(now) {
+    if(!tLoaded){
+      requestAnimationFrame(drawScene);
+      return;
+    }
+    
     now *= 0.001; // convert to seconds
     resizeCanvasToDisplaySize(gl.canvas);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -49,11 +71,10 @@ function main() {
     // Tell it to use our program (pair of shaders)
     gl.useProgram(program);
 
-    // Turn on the attribute
     gl.enableVertexAttribArray(positionAttributeLocation);
-    // Turn on the attribute
     gl.enableVertexAttribArray(normalAttributeLocation);
-    // Turn on the attribute
+    var buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.enableVertexAttribArray(texCoordAttributeLocation);
 
 
@@ -72,7 +93,7 @@ function main() {
 
 
     modelView = m4.multiply(modelView, m4.inverse(m4.lookAt([0,0,5], [0,0,0],[0,1,0])));
-    modelView = m4.xRotate(modelView, toRadian(90));
+    modelView = m4.xRotate(modelView, toRadian(-90));
     modelView = m4.xRotate(modelView, toRadian(yAngle));
     modelView = m4.zRotate(modelView, toRadian(xAngle));
 
@@ -83,7 +104,8 @@ function main() {
 
     // Draw in red
     gl.uniform4fv(colorLocation, [1, 0, 0, 1]);
-    gl.drawElements(gl.LINE_STRIP, sphere.getIndexCount(), gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, sphere.getIndexCount(), gl.UNSIGNED_SHORT, 0);
+    //gl.drawElements(gl.LINE_STRIP, sphere.getIndexCount(), gl.UNSIGNED_SHORT, 0);
     requestAnimationFrame(drawScene);
   }
 
