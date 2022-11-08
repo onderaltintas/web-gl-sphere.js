@@ -1,0 +1,46 @@
+<canvas id="c" width="1200" height="1000" style="width: 1200px; height: 1000px;"></canvas>
+ 
+<script  id="vertex-shader-2d" type="x-shader/x-vertex">
+attribute vec3 vertex;
+attribute vec3 normal;
+attribute vec2 texCoord;
+uniform mat4 projection;
+uniform mat4 modelView;
+varying vec2 vTexCoord;
+varying vec3 vNormal;
+varying vec4 vColor;
+void main(void)
+{ 
+  // transform vertex position to clip space
+  gl_Position = projection * modelView * vec4(vertex, 1);
+	vNormal = normal;
+	vColor = vec4(1,0,0,1);
+  vTexCoord = texCoord;
+}
+
+</script>
+<!-- fragment shader -->
+<script  id="fragment-shader-2d" type="x-shader/x-fragment">
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+#else
+    precision mediump float;
+#endif
+
+uniform vec4 color;
+varying vec4 vColor;
+varying vec2 vTexCoord;
+varying vec3 vNormal;
+uniform sampler2D uTexture;
+
+void main(void)
+{
+	gl_FragColor = texture2D(uTexture, vTexCoord);
+}
+</script>
+
+<script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
+<script src="https://webglfundamentals.org/webgl/resources/m3.js"></script>
+<script src="https://webglfundamentals.org/webgl/resources/m4.js"></script>
+<script src="Sphere.js"></script>
+<script src="webgl_simple.js"></script>
