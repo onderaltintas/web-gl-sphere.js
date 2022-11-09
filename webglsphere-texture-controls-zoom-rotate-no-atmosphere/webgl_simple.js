@@ -69,6 +69,8 @@ function main() {
     var modelView = m4.identity();
     modelView = m4.multiply(modelView, m4.inverse(m4.lookAt([0,0,5], [0,0,0],[0,1,0])));
     modelView = m4.xRotate(modelView, toRadian(-90));
+    yAngle = yAngle > 90 ? 90 : yAngle;
+    yAngle = yAngle < -90 ? -90 : yAngle;
     modelView = m4.xRotate(modelView, toRadian(yAngle));
     modelView = m4.zRotate(modelView, toRadian(xAngle));
     modelView = m4.scale( modelView, zoomFactor,zoomFactor,zoomFactor);
