@@ -25,10 +25,9 @@ function main() {
 
 
   // lookup uniforms
-  var colorLocation = gl.getUniformLocation(program, "color");
   var projectionMatrixLocation = gl.getUniformLocation(program, "projection");
   var modelviewMatrixLocation = gl.getUniformLocation(program, "modelView");
-  var sphere = new Sphere(gl, 1.0, 30, 30, true);
+  var sphere = new Sphere(gl, 1.0, 60, 60, true);
 
   requestAnimationFrame(drawScene);
 
@@ -39,7 +38,11 @@ function main() {
       return;
     }
     
-    now *= 0.01; // convert to seconds
+    if(autoRotate){
+      xAngle = xAngle + autoRotateAngle / zoomFactor;
+      lastXAngle += autoRotateAngle / zoomFactor;
+    }
+
     resizeCanvasToDisplaySize(gl.canvas);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.textureEnabled = true;
@@ -52,8 +55,6 @@ function main() {
 
     gl.enableVertexAttribArray(positionAttributeLocation);
     gl.enableVertexAttribArray(normalAttributeLocation);
-    var buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.enableVertexAttribArray(texCoordAttributeLocation);
 
 
@@ -66,8 +67,6 @@ function main() {
     // Compute the matrices
     var projectionMatrix = m4.perspective(Math.PI/180*45, gl.canvas.width/gl.canvas.height, 0.1, 1000);
     var modelView = m4.identity();
-    //modelView = m4.zRotate(modelView, 20*now/180*Math.PI);
-
     modelView = m4.multiply(modelView, m4.inverse(m4.lookAt([0,0,5], [0,0,0],[0,1,0])));
     modelView = m4.xRotate(modelView, toRadian(-90));
     modelView = m4.xRotate(modelView, toRadian(yAngle));
@@ -78,7 +77,6 @@ function main() {
     gl.uniformMatrix4fv(modelviewMatrixLocation, false, modelView);
 
     // Draw in red
-    gl.uniform4fv(colorLocation, [1, 0, 0, 1]);
     gl.drawElements(gl.TRIANGLES, sphere.getIndexCount(), gl.UNSIGNED_SHORT, 0);
     //gl.drawElements(gl.LINE_STRIP, sphere.getIndexCount(), gl.UNSIGNED_SHORT, 0);
     requestAnimationFrame(drawScene);
@@ -135,6 +133,9 @@ var yAngle = 0;
 var lastXAngle = 0;
 var lastYAngle = 0;
 var zoomFactor = 1;
+var autoRotateAngle = 0.01;
+var autoRotate = true;
+var rotateTimeouts = [];
 
 window.addEventListener("mousedown", mouseDown, false);
 window.addEventListener("mousemove", mouseMove, false);
@@ -144,12 +145,14 @@ window.addEventListener('wheel', wheel);
 function mouseDown(event){
   firstPosX = event.clientX;
   firstPosY = event.clientY;
+  stopRotate();
   mouseDragging = true;
 }
 
 function mouseUp(event){
   lastXAngle = xAngle;
   lastYAngle = yAngle;
+  startRotate();
   mouseDragging = false;
 }
 
@@ -166,7 +169,24 @@ function wheel(event){
   zoomFactor -= event.deltaY / 750;
   zoomFactor = zoomFactor > 4.5 ? 4.5 : zoomFactor;
   zoomFactor = zoomFactor <= 0.2 ? 0.2 : zoomFactor;
-  console.log(zoomFactor);
+  stopRotate();
+  startRotate();
+}
+
+function stopRotate(){
+  while(rotateTimeouts.length){
+    clearTimeout(rotateTimeouts.pop());
+  }
+  
+  autoRotate = false;
+}
+
+function startRotate(){
+  var rotateTimeout = setTimeout(function(){
+    autoRotate = true;
+  },2000);
+  
+  rotateTimeouts.push(rotateTimeout);
 }
 
 //geometry!
